@@ -29,6 +29,6 @@ test('production migration requires a protected environment and explicit evidenc
   ]) {
     assert.ok(workflow.includes(required), `Missing ${required}`);
   }
-  assert.match(guide, /No Supabase credential was added to GitHub/);
-  assert.match(guide, /no migration was applied/i);
+  assert.match(guide, /GitHub Environment is configured by the project\s+administrator/);
+  assert.match(guide, /No Supabase\s+migration, database write, data import, or deployment occurs/);
 });

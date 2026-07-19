@@ -45,6 +45,10 @@ confirmation: APPLY_PRODUCTION_MIGRATIONS
 
 The GitHub Environment approval and the exact confirmation are both required before `supabase db push` can run. The workflow runs a dry run first, then writes only the tracked migration files. It never resets, truncates, or deletes production data.
 
-## What Has Not Happened
+## Current Release Status
 
-No Supabase credential was added to GitHub, no GitHub Environment was created, and no migration was applied. Those are protected account-level actions that must be configured by the project administrator.
+The `supabase-production` GitHub Environment is configured by the project
+administrator. Repository source validation remains non-destructive. No Supabase
+migration, database write, data import, or deployment occurs until the required backup
+reference, development-test reference, explicit production authorization, and GitHub
+Environment approval are supplied for a manual workflow run.
