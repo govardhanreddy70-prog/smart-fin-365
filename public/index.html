@@ -54,6 +54,26 @@
           <button id="createAccountButton" type="button">Create Account</button>
           <button class="link-button" id="openLoginButton" type="button">Already have an account? Sign In</button>
         </section>
+        <section id="localAdminSetupPanel" class="auth-mode-panel" hidden>
+          <p class="auth-copy">Create the administrator password for this local Smart Fin 365 server. This setup is available only from the server computer.</p>
+          <label>
+            New administrator password
+            <input id="localAdminSetupPassword" type="password" autocomplete="new-password" minlength="10">
+          </label>
+          <label>
+            Confirm administrator password
+            <input id="localAdminSetupConfirmPassword" type="password" autocomplete="new-password" minlength="10">
+          </label>
+          <button id="localAdminSetupSubmit" type="button">Set Administrator Password</button>
+        </section>
+        <section class="auth-mode-panel auth-server-panel">
+          <label>
+            Smart Fin 365 server URL
+            <input id="authServerUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://your-server.example">
+          </label>
+          <button class="secondary-button" id="authConnectServerButton" type="button">Connect Server</button>
+          <p id="authServerStatus" class="message" role="status"></p>
+        </section>
         <section id="loginOtpPanel" class="forgot-password-panel" hidden>
           <p id="loginOtpHint" class="auth-copy">Choose one enabled authentication method to continue.</p>
           <div id="loginOtpChoices" class="otp-choice-grid"></div>
@@ -866,6 +886,6 @@
     </main>
 
     <script src="server-config.js?v=20260719-smart-fin-365-brand"></script>
-    <script src="script.js?v=20260719-smart-fin-365-brand"></script>
+    <script src="script.js?v=20260719-login-connectivity"></script>
   </body>
 </html>

@@ -96,6 +96,13 @@ const authGate = document.querySelector("#authGate");
 const authForm = document.querySelector("#authForm");
 const loginPanel = document.querySelector("#loginPanel");
 const signupPanel = document.querySelector("#signupPanel");
+const localAdminSetupPanel = document.querySelector("#localAdminSetupPanel");
+const localAdminSetupPasswordInput = document.querySelector("#localAdminSetupPassword");
+const localAdminSetupConfirmPasswordInput = document.querySelector("#localAdminSetupConfirmPassword");
+const localAdminSetupSubmit = document.querySelector("#localAdminSetupSubmit");
+const authServerUrlInput = document.querySelector("#authServerUrl");
+const authConnectServerButton = document.querySelector("#authConnectServerButton");
+const authServerStatus = document.querySelector("#authServerStatus");
 const authUsernameInput = document.querySelector("#authUsername");
 const authPasswordInput = document.querySelector("#authPassword");
 const authRememberMeInput = document.querySelector("#authRememberMe");
@@ -204,6 +211,7 @@ let activeLoginOtpChannel = "";
 let activeSecondFactorMethod = "";
 let activeSecondFactorSetup = false;
 let authPublicStatus = { otpEnabled: false, loginMode: "password-only" };
+let serverRecoveryPromise = null;
 const reportFavouritesStorageKey = "smartFinanceReportFavourites";
 const backgroundRefreshMs = 15000;
 const backgroundRefreshDebounceMs = 1200;
@@ -419,6 +427,7 @@ function setAuthMode(mode = "login", statusText = "", statusColor = "#475467") {
   if (loginOtpInput) loginOtpInput.value = "";
   if (loginConfirmMpinInput) loginConfirmMpinInput.value = "";
   if (loginConfirmMpinLabel) loginConfirmMpinLabel.hidden = true;
+  if (localAdminSetupPanel) localAdminSetupPanel.hidden = true;
   activeLoginChallengeId = "";
   activeLoginOtpChannel = "";
   activeSecondFactorMethod = "";
@@ -436,6 +445,7 @@ function setAuthMode(mode = "login", statusText = "", statusColor = "#475467") {
     authPasswordInput?.setAttribute("required", "");
     setTimeout(() => (authPasswordInput || authUsernameInput)?.focus(), 50);
   }
+  applyAuthAvailability();
 }
 
 function showAuthGate(text = "Sign in to continue.", username = "", mode = "login") {
@@ -512,7 +522,7 @@ async function apiFetch(path, options = {}) {
   if (auth?.token) {
     requestHeaders.set("Authorization", `Bearer ${auth.token}`);
   }
-  const response = await fetch(apiUrl(path), {
+  const response = await fetchWithServerRecovery(path, {
     credentials: serverBaseUrl ? "include" : "same-origin",
     ...fetchOptions,
     headers: requestHeaders
@@ -527,7 +537,7 @@ async function apiFetch(path, options = {}) {
 }
 
 async function publicApiJson(path, payload) {
-  const response = await fetch(apiUrl(path), {
+  const response = await fetchWithServerRecovery(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload || {}),
@@ -541,16 +551,79 @@ async function publicApiJson(path, payload) {
 
 async function loadAuthPublicStatus() {
   try {
-    const response = await fetch(apiUrl("/api/auth/public-status"), {
+    const response = await fetchWithServerRecovery("/api/auth/public-status", {
       credentials: serverBaseUrl ? "include" : "same-origin",
       cache: "no-store"
     });
     const data = await response.json().catch(() => ({}));
     if (response.ok) authPublicStatus = data;
   } catch {}
+  applyAuthAvailability();
   if (!authPublicStatus.otpEnabled && loginOtpPanel) loginOtpPanel.hidden = true;
   if (authSubmitButton) authSubmitButton.textContent = authPublicStatus.otpEnabled ? "Continue" : "Sign In";
   return authPublicStatus;
+}
+
+function isLocalSetupOrigin() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+}
+
+function applyAuthAvailability() {
+  if (authPublicStatus.loginConfigured !== false) return;
+  const canBootstrap = Boolean(authPublicStatus.localBootstrapAvailable) && isLocalSetupOrigin();
+  if (loginPanel) loginPanel.hidden = true;
+  if (signupPanel) signupPanel.hidden = true;
+  if (forgotPasswordPanel) forgotPasswordPanel.hidden = true;
+  if (loginChangePasswordPanel) loginChangePasswordPanel.hidden = true;
+  if (loginOtpPanel) loginOtpPanel.hidden = true;
+  if (localAdminSetupPanel) localAdminSetupPanel.hidden = !canBootstrap;
+  if (authMessage) {
+    authMessage.style.color = "#b42318";
+    authMessage.textContent = canBootstrap
+      ? "Administrator access has not been configured. Set a password on this server computer."
+      : "Administrator access has not been configured. Open Smart Fin 365 locally on the server computer to complete secure setup.";
+  }
+  if (canBootstrap) setTimeout(() => localAdminSetupPasswordInput?.focus(), 50);
+}
+
+async function recoverServerConnection() {
+  if (serverRecoveryPromise) return serverRecoveryPromise;
+  serverRecoveryPromise = (async () => {
+    const currentOrigin = normalizeServerUrl(window.location.origin);
+    for (const candidate of serverCandidateUrls()) {
+      if (!await pingServerUrl(candidate)) continue;
+      serverBaseUrl = candidate === currentOrigin ? "" : candidate;
+      if (serverBaseUrl) localStorage.setItem(serverUrlStorageKey, serverBaseUrl);
+      else localStorage.removeItem(serverUrlStorageKey);
+      updateServerUi();
+      return true;
+    }
+    return false;
+  })();
+  try {
+    return await serverRecoveryPromise;
+  } finally {
+    serverRecoveryPromise = null;
+  }
+}
+
+async function fetchWithServerRecovery(path, options) {
+  const requestOptions = () => ({
+    ...options,
+    credentials: serverBaseUrl ? "include" : "same-origin"
+  });
+  try {
+    return await fetch(apiUrl(path), requestOptions());
+  } catch (initialError) {
+    const recovered = await recoverServerConnection();
+    if (recovered) {
+      try {
+        return await fetch(apiUrl(path), requestOptions());
+      } catch {}
+    }
+    throw new Error("Cannot reach the Smart Fin 365 server. Open the current application URL and make sure its /healthz endpoint is available.");
+  }
 }
 
 function uniqueServerUrls(values) {
@@ -616,7 +689,11 @@ async function autoSelectReachableServer() {
 }
 
 function updateServerUi() {
-  serverUrlInput.value = serverBaseUrl || window.location.origin;
+  const activeServerUrl = serverBaseUrl || window.location.origin;
+  if (serverUrlInput) serverUrlInput.value = activeServerUrl;
+  if (authServerUrlInput && document.activeElement !== authServerUrlInput) {
+    authServerUrlInput.value = /^https?:\/\//i.test(activeServerUrl) ? activeServerUrl : (configuredPublicServerUrl || "");
+  }
   document.querySelector(".download-link").href = apiUrl("/download");
 }
 
@@ -4944,6 +5021,67 @@ authForm?.addEventListener("submit", async (event) => {
     authPasswordInput.focus();
   } finally {
     authSubmitButton.disabled = false;
+  }
+});
+
+localAdminSetupSubmit?.addEventListener("click", async () => {
+  localAdminSetupSubmit.disabled = true;
+  if (authMessage) {
+    authMessage.style.color = "#475467";
+    authMessage.textContent = "Configuring administrator access...";
+  }
+  try {
+    const data = await publicApiJson("/api/auth/local-bootstrap", {
+      newPassword: localAdminSetupPasswordInput?.value || "",
+      confirmPassword: localAdminSetupConfirmPasswordInput?.value || ""
+    });
+    if (localAdminSetupPasswordInput) localAdminSetupPasswordInput.value = "";
+    if (localAdminSetupConfirmPasswordInput) localAdminSetupConfirmPasswordInput.value = "";
+    authPublicStatus = { ...authPublicStatus, loginConfigured: true, localBootstrapAvailable: false };
+    setAuthMode("login", data.message || "Administrator password configured. Sign in to continue.", "#146c43");
+  } catch (error) {
+    if (authMessage) {
+      authMessage.style.color = "#b42318";
+      authMessage.textContent = error.message || "Unable to configure administrator access.";
+    }
+  } finally {
+    localAdminSetupSubmit.disabled = false;
+  }
+});
+
+authConnectServerButton?.addEventListener("click", async () => {
+  const candidate = normalizeServerUrl(authServerUrlInput?.value);
+  if (!candidate) {
+    if (authServerStatus) {
+      authServerStatus.style.color = "#b42318";
+      authServerStatus.textContent = "Enter the current Smart Fin 365 server URL.";
+    }
+    return;
+  }
+  authConnectServerButton.disabled = true;
+  if (authServerStatus) {
+    authServerStatus.style.color = "#475467";
+    authServerStatus.textContent = "Checking server connection...";
+  }
+  try {
+    if (!await pingServerUrl(candidate)) throw new Error("The server health check did not respond.");
+    const currentOrigin = normalizeServerUrl(window.location.origin);
+    serverBaseUrl = candidate === currentOrigin ? "" : candidate;
+    if (serverBaseUrl) localStorage.setItem(serverUrlStorageKey, serverBaseUrl);
+    else localStorage.removeItem(serverUrlStorageKey);
+    updateServerUi();
+    await loadAuthPublicStatus();
+    if (authServerStatus) {
+      authServerStatus.style.color = "#146c43";
+      authServerStatus.textContent = `Connected to ${candidate}.`;
+    }
+  } catch (error) {
+    if (authServerStatus) {
+      authServerStatus.style.color = "#b42318";
+      authServerStatus.textContent = error.message || "Could not connect to that server.";
+    }
+  } finally {
+    authConnectServerButton.disabled = false;
   }
 });
 

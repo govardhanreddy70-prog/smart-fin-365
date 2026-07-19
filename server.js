@@ -61,10 +61,13 @@ const defaultUpstoxHistoryStartDate = process.env.UPSTOX_HISTORY_START_DATE || "
 const appUrl = (process.env.PUBLIC_APP_URL || process.env.APP_URL || process.env.PUBLIC_BASE_URL || (isProductionEnvironment ? "" : `http://localhost:${port}`)).replace(/\/+$/, "");
 const isHostedProduction = isProductionEnvironment || /^https:\/\//i.test(appUrl);
 const corsAllowedOrigins = new Set(
-  String(process.env.CORS_ALLOWED_ORIGINS || appUrl || "")
+  [
+    ...String(process.env.CORS_ALLOWED_ORIGINS || appUrl || "")
     .split(",")
     .map((origin) => origin.trim().replace(/\/+$/, ""))
-    .filter(Boolean)
+    .filter(Boolean),
+    ...(isProductionEnvironment ? [] : ["capacitor://localhost", "ionic://localhost"])
+  ]
 );
 const supabaseUrl = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
 // Supabase calls accept the current publishable-key name and the legacy anon-key name.
@@ -350,6 +353,11 @@ function financeIdentifierMatches(identifier, settings) {
     .filter(Boolean)
     .map((value) => safeText(value).toLowerCase())
     .includes(normalized);
+}
+
+function isLoopbackRequest(req) {
+  const address = safeText(req.socket?.remoteAddress || req.ip).replace(/^::ffff:/i, "");
+  return address === "127.0.0.1" || address === "::1";
 }
 
 function createFinanceSession(settings) {
@@ -1848,7 +1856,7 @@ async function writePublicLoginFile(username) {
     [
       "Smart Fin 365 public URL login",
       `Username: ${username}`,
-      "Password: not stored or displayed. Use the configured administrator password plus OTP.",
+      "Password: not stored or displayed. Use the configured administrator password.",
       ""
     ].join("\n"),
     "utf8"
@@ -7059,7 +7067,11 @@ app.post("/api/auth/login", async (req, res, next) => {
       await appendSecurityLog("login_rate_limited", { identifierHash: resetHash(identifier) });
       return res.status(429).json({ error: "Too many login attempts. Try again later." });
     }
-    if (!settings.enabled) return res.status(503).json({ error: "Finance web password is not configured." });
+    if (!settings.enabled) {
+      return res.status(503).json({
+        error: "Administrator access has not been configured. Open Smart Fin 365 locally on the server computer to complete secure setup."
+      });
+    }
     const configUsers = await getRegisteredUsers(config);
     const registeredUser = findRegisteredUser(identifier, configUsers);
     const adminLogin = financeIdentifierMatches(identifier, settings);
@@ -7187,6 +7199,8 @@ app.get("/api/auth/public-status", async (_req, res, next) => {
       ok: true,
       otpEnabled: authOtpEnabled,
       loginMode: authOtpEnabled ? "password-otp" : "password-second-factor",
+      loginConfigured: settings.enabled,
+      localBootstrapAvailable: !isHostedProduction && !settings.enabled,
       supabaseAuthConfigured: supabaseAuthConfigured(),
       supabaseUrl: supabaseAuthConfigured() ? supabaseUrl : "",
       supabaseAnonKey: supabaseAuthConfigured() ? supabaseAnonKey : "",
@@ -7197,6 +7211,36 @@ app.get("/api/auth/public-status", async (_req, res, next) => {
         role: settings.role
       }
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/local-bootstrap", async (req, res, next) => {
+  try {
+    if (isHostedProduction || !isLoopbackRequest(req)) return res.sendStatus(404);
+    const settings = await getFinanceAuthSettings();
+    if (settings.enabled) return res.status(409).json({ error: "Administrator access is already configured." });
+
+    const newPassword = String(req.body.newPassword || "");
+    const confirmPassword = String(req.body.confirmPassword || "");
+    const strengthErrors = passwordStrengthErrors(newPassword);
+    if (strengthErrors.length) return res.status(400).json({ error: strengthErrors.join(" ") });
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: "New password and confirm password do not match." });
+    }
+
+    await updateConfig({
+      financeWebUser: settings.username,
+      financeAdminEmail: settings.adminEmail,
+      financeAdminMobile: settings.adminMobile,
+      financeWebPasswordHash: createPasswordHash(newPassword),
+      financeWebPasswordChangedAt: nowIso()
+    });
+    await writePublicLoginFile(settings.username);
+    await appendSecurityLog("local_admin_password_initialized", { username: settings.username, role: settings.role });
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    return res.json({ ok: true, username: settings.username, message: "Administrator password configured. Sign in to continue." });
   } catch (error) {
     next(error);
   }

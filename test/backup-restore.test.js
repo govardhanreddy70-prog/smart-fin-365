@@ -81,7 +81,8 @@ test('production configuration is environment-based and exposes a readiness heal
   assert.match(server, /const environmentWorkbookPath = safeText\(process\.env\.FINANCE_WORKBOOK_PATH\)/);
   assert.match(productionEnv, /^PUBLIC_APP_URL=https:\/\/smartfin365\.com$/m);
   assert.match(productionEnv, /^GOOGLE_REDIRECT_URI=https:\/\/smartfin365\.com\/oauth2callback$/m);
-  assert.doesNotMatch(productionEnv, /localhost/i);
+  assert.doesNotMatch(productionEnv, /http:\/\/localhost/i);
+  assert.match(productionEnv, /capacitor:\/\/localhost/);
 });
 
 test('production package and repository rules exclude private workbook and runtime secrets', () => {
