@@ -1,0 +1,109 @@
+name: Supabase Migration Safety Gate
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "test/**"
+      - "package.json"
+      - "package-lock.json"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "test/**"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+    inputs:
+      apply_production:
+        description: "Set true only after backup verification, development testing, and approval."
+        required: true
+        default: false
+        type: boolean
+      backup_reference:
+        description: "Verified, restorable production backup or PITR reference."
+        required: true
+        type: string
+      development_test_reference:
+        description: "Development project/branch test result reference."
+        required: true
+        type: string
+      confirmation:
+        description: "Enter APPLY_PRODUCTION_MIGRATIONS to authorize the database write."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-production-migrations
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Migration Source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Record validation result
+        run: |
+          {
+            echo "## Supabase migration validation"
+            echo "- Source migration checks passed."
+            echo "- No database write was performed by this job."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  production-migrate:
+    name: Apply Approved Production Migrations
+    needs: validate
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.apply_production == true &&
+      inputs.confirmation == 'APPLY_PRODUCTION_MIGRATIONS'
+    runs-on: ubuntu-latest
+    environment:
+      name: supabase-production
+      url: https://${{ vars.SUPABASE_PROJECT_REF }}.supabase.co
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      BACKUP_REFERENCE: ${{ inputs.backup_reference }}
+      DEVELOPMENT_TEST_REFERENCE: ${{ inputs.development_test_reference }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Verify protected release prerequisites
+        shell: bash
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_REF"
+          test -n "$BACKUP_REFERENCE"
+          test -n "$DEVELOPMENT_TEST_REFERENCE"
+      - name: Link the approved project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Show pending migrations
+        run: supabase db push --dry-run
+      - name: Apply approved migrations
+        run: supabase db push
+      - name: Record production release evidence
+        shell: bash
+        run: |
+          {
+            echo "## Approved production migration"
+            echo "- Project ref: $SUPABASE_PROJECT_REF"
+            echo "- Backup reference: $BACKUP_REFERENCE"
+            echo "- Development test reference: $DEVELOPMENT_TEST_REFERENCE"
+            echo "- Migration source: $GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"

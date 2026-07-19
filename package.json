@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/supabase-migrations.test.js test/backup-restore.test.js",
+    "test": "node --test test/supabase-migrations.test.js test/backup-restore.test.js test/github-supabase-workflow.test.js",
     "package:production": "powershell -ExecutionPolicy Bypass -File .\\scripts\\create-godaddy-package.ps1",
     "godaddy:start": "node server.js",
     "mobile:sync": "cap sync",
