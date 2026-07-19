@@ -1,0 +1,2 @@
+# The production package contains no financial workbook or runtime configuration.
+# Mount a protected persistent DATA_DIR and BACKUP_STORAGE_DIR before starting the app.

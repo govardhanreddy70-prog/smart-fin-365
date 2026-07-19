@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Smart Fin 365">
+  <defs>
+    <linearGradient id="blue" x1="8" y1="8" x2="42" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0066d9"/>
+      <stop offset="1" stop-color="#062f63"/>
+    </linearGradient>
+    <linearGradient id="green" x1="14" y1="50" x2="58" y2="15" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#69c92d"/>
+      <stop offset="1" stop-color="#1d7f20"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#ffffff"/>
+  <path d="M13 42A24 24 0 0 1 48 14" fill="none" stroke="url(#blue)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M51 18a24 24 0 0 1-38 32" fill="none" stroke="url(#green)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M50 18l7 6-9 3z" fill="#2f9b23"/>
+  <path d="M18 41h7V28h-7zm11 0h7V22h-7zm11 0h7V16h-7z" fill="url(#blue)"/>
+  <path d="M16 35c7-8 15-12 28-23" fill="none" stroke="#2f9b23" stroke-width="4" stroke-linecap="round"/>
+  <path d="M42 12h9v9" fill="none" stroke="#2f9b23" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

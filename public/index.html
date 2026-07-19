@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#082F6B">
+    <meta name="application-name" content="Smart Fin 365">
+    <meta name="description" content="Smart personal finance management, tracking and analytics.">
+    <title>Smart Fin 365 | Plan Smart. Live Better.</title>
+    <link rel="icon" type="image/png" href="assets/smart-fin-365-favicon.png?v=20260719-smart-fin-365-brand">
+    <link rel="apple-touch-icon" href="assets/smart-fin-365-icon-192.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css?v=20260719-smart-fin-365-brand">
+  </head>
+  <body data-page="home">
+    <section id="authGate" class="auth-gate" hidden>
+      <form id="authForm" class="auth-card">
+        <div class="brand-mark auth-brand" aria-hidden="true">
+          <img src="assets/smart-fin-365-logo.png" alt="Smart Fin 365">
+        </div>
+        <div>
+          <p class="eyebrow">Secure access</p>
+          <h1>Smart Fin 365</h1>
+          <p class="auth-copy">Plan Smart. Live Better.</p>
+          <p class="auth-copy">Enter your Smart Fin 365 login to sync records, Excel, Google Drive and trading data.</p>
+        </div>
+        <section id="loginPanel" class="auth-mode-panel">
+          <label>
+            Email or mobile number
+            <input id="authUsername" name="username" type="text" autocomplete="username" value="admin">
+          </label>
+          <label>
+            Password
+            <input id="authPassword" name="password" type="password" autocomplete="current-password">
+          </label>
+          <label class="auth-inline">
+            <input id="authRememberMe" name="rememberMe" type="checkbox">
+            Remember Me
+          </label>
+          <button id="authSubmitButton" type="submit">Sign In</button>
+          <div class="auth-link-row">
+            <button class="link-button" id="forgotPasswordButton" type="button">Forgot Password</button>
+            <button class="link-button" id="loginChangePasswordButton" type="button">Change Password</button>
+          </div>
+          <button class="link-button" id="openSignupButton" type="button">New user? Create Account</button>
+        </section>
+        <section id="signupPanel" class="auth-mode-panel signup-fields" hidden>
+          <label>Full name <input id="signupFullName" name="fullName" type="text" autocomplete="name"></label>
+          <label>Email address <input id="signupEmail" name="email" type="email" autocomplete="email"></label>
+          <label>Mobile number <input id="signupMobile" name="mobile" type="tel" autocomplete="tel"></label>
+          <label>New password <input id="signupPassword" name="signupPassword" type="password" autocomplete="new-password"></label>
+          <label>Confirm password <input id="signupConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password"></label>
+          <label class="auth-inline"><input id="signupTerms" name="terms" type="checkbox"> Accept Terms and Privacy</label>
+          <button id="createAccountButton" type="button">Create Account</button>
+          <button class="link-button" id="openLoginButton" type="button">Already have an account? Sign In</button>
+        </section>
+        <section id="loginOtpPanel" class="forgot-password-panel" hidden>
+          <p id="loginOtpHint" class="auth-copy">Choose one enabled authentication method to continue.</p>
+          <div id="loginOtpChoices" class="otp-choice-grid"></div>
+          <label>
+            Security code / MPIN
+            <input id="loginOtp" type="text" inputmode="numeric" autocomplete="one-time-code">
+          </label>
+          <label id="loginConfirmMpinLabel" hidden>
+            Confirm MPIN
+            <input id="loginConfirmMpin" type="password" inputmode="numeric" autocomplete="off" maxlength="4">
+          </label>
+          <button id="verifyLoginOtpButton" type="button">Verify and Sign In</button>
+          <button class="link-button" id="resendLoginOtpButton" type="button" hidden>Resend Code</button>
+          <button class="link-button" id="changeLoginIdentifierButton" type="button">Change Login Identifier</button>
+        </section>
+        <section id="forgotPasswordPanel" class="forgot-password-panel" hidden>
+          <label>
+            Registered email address
+            <input id="forgotIdentifier" type="email" autocomplete="email">
+          </label>
+          <button id="requestResetButton" type="button">Send Reset Email</button>
+          <p id="forgotPasswordStatus" class="message" role="status"></p>
+        </section>
+        <section id="loginChangePasswordPanel" class="forgot-password-panel" hidden>
+          <label>
+            Email or mobile number
+            <input id="loginChangePasswordIdentifier" type="text" autocomplete="username">
+          </label>
+          <label>
+            Current Password
+            <input id="loginCurrentPassword" type="password" autocomplete="current-password">
+          </label>
+          <label>
+            New Password
+            <input id="loginNewPassword" type="password" autocomplete="new-password" minlength="10">
+          </label>
+          <label>
+            Confirm New Password
+            <input id="loginConfirmPassword" type="password" autocomplete="new-password" minlength="10">
+          </label>
+          <button id="loginChangePasswordSubmit" type="button">Update Password</button>
+          <p id="loginChangePasswordStatus" class="message" role="status"></p>
+        </section>
+        <p id="authMessage" class="message" role="status"></p>
+      </form>
+    </section>
+
+    <section id="sessionWarning" class="session-warning" hidden>
+      <div class="session-warning-card" role="alertdialog" aria-labelledby="sessionWarningTitle" aria-describedby="sessionWarningText">
+        <h2 id="sessionWarningTitle">Session expiring</h2>
+        <p id="sessionWarningText">You will be logged out soon because there has been no activity.</p>
+        <strong id="sessionCountdown">30</strong>
+        <p id="unsavedSessionWarning" hidden>Unsaved form changes may be lost after logout.</p>
+        <button id="stayLoggedInButton" type="button">Stay Logged In</button>
+      </div>
+    </section>
+
+    <header class="app-header" id="appHeader">
+      <a class="app-brand" href="#home" data-route="home" aria-label="Smart Fin 365 home">
+        <span class="app-brand-logo"><img src="assets/smart-fin-365-icon-192.png" alt=""></span>
+        <span class="app-brand-copy">
+          <strong>Smart Fin <b>365</b></strong>
+          <small>Plan Smart. Live Better.</small>
+        </span>
+      </a>
+      <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+      <nav class="app-nav" id="appNav" aria-label="Primary navigation">
+        <a href="#home" data-route="home"><span aria-hidden="true">Home</span><b>Home</b></a>
+        <a href="#summary" data-route="summary"><span aria-hidden="true">Dash</span><b>Dashboard</b></a>
+        <a href="#net-worth" data-route="net-worth"><span aria-hidden="true">Worth</span><b>Net Worth</b></a>
+        <a href="#growth" data-route="growth"><span aria-hidden="true">Rpt</span><b>Reports</b></a>
+        <a href="#goals-planning" data-route="goals-planning"><span aria-hidden="true">Goal</span><b>Goals</b></a>
+        <a href="#settings-sync" data-route="settings-sync"><span aria-hidden="true">Set</span><b>Settings</b></a>
+        <a href="#language" data-route="language"><span aria-hidden="true">Lang</span><b>Language</b></a>
+        <a href="#help-support" data-route="help-support"><span aria-hidden="true">Help</span><b>Help &amp; Support</b></a>
+      </nav>
+      <div class="app-actions">
+        <button class="notification-button" id="notificationButton" type="button" aria-label="Notifications">
+          <span>🔔</span>
+          <b id="notificationCount">0</b>
+        </button>
+        <button class="header-auth-button" id="headerLoginButton" type="button">Login</button>
+        <button class="header-auth-button signup" id="headerSignupButton" type="button">Sign Up</button>
+        <button class="header-profile-button" id="headerProfileButton" type="button" hidden>Admin</button>
+        <button class="header-auth-button" id="headerLogoutButton" type="button" hidden>Logout</button>
+      </div>
+      <section class="notification-panel" id="notificationPanel" hidden>
+        <header>
+          <h3>Notifications</h3>
+          <button type="button" id="markAllNotificationsRead">Mark All as Read</button>
+        </header>
+        <div id="notificationList" class="notification-list"></div>
+      </section>
+    </header>
+
+    <section class="home-screen" id="homeScreen">
+      <div class="home-inner">
+        <nav class="home-grid" aria-label="Smart Fin 365 sections">
+          <a class="dashboard-card tile-salary" href="#salary-income" data-route="salary-income">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M7 11h5"/><path d="M16 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M6 20h12"/></svg>
+            </span>
+            <strong>Family Income</strong>
+            <small>Track salary, income, bank cash, savings and EPFO growth</small>
+          </a>
+          <a class="dashboard-card tile-family-expenses" href="#family-expenses" data-route="family-expenses">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 10h16"/><path d="M6 10v9h12v-9"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/><path d="M9 14h6"/></svg>
+            </span>
+            <strong>Family Expenses</strong>
+            <small>Track household and family member expenses by month</small>
+          </a>
+          <a class="dashboard-card tile-salary" href="#family-income" data-route="family-income">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M8 12h8"/><path d="M7 20h10"/></svg>
+            </span>
+            <strong>Family Income</strong>
+            <small>Track expected, received and pending family income</small>
+          </a>
+          <a class="dashboard-card tile-farm" href="#farm-manager" data-route="farm-manager">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 18c4-5 9-7 16-7"/><path d="M4 18h16"/><path d="M8 15c0-4 2-7 5-9"/><path d="M13 6c2 1 4 3 5 6"/></svg>
+            </span>
+            <strong>Agriculture &amp; Farm Manager</strong>
+            <small>Manage farms, crops, activities, income, expenses and inventory</small>
+          </a>
+          <a class="dashboard-card tile-business" href="#business-manager" data-route="business-manager">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14"/><path d="M8 21v-8h8v8"/><path d="M9 8h1M14 8h1"/><path d="M7 17h10"/><path d="M17 4c1 3 2 5 4 7"/><path d="M17 11h4V7"/><path d="M11 14h2M11 17h2"/></svg>
+            </span>
+            <strong>Business Manager</strong>
+            <small>Royal-blue business P/L, receivables, assets and growth tracking</small>
+          </a>
+          <a class="dashboard-card tile-debt" href="#debt" data-route="debt">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 6h14v12H5z"/><path d="M8 10h8M8 14h5"/><path d="M17 6v12"/></svg>
+            </span>
+            <strong>Lent Manager</strong>
+            <small>Track amount lent, recovered, partial repayments and live interest</small>
+          </a>
+          <a class="dashboard-card tile-loan" href="#loan" data-route="loan">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 10h18L12 4z"/><path d="M5 10v8M9 10v8M15 10v8M19 10v8M4 18h16M3 21h18"/></svg>
+            </span>
+            <strong>Loans and Property Loans</strong>
+            <small>Handle general loans, property loans, EMI progress and repayments</small>
+          </a>
+          <a class="dashboard-card tile-property" href="#property" data-route="property">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+            </span>
+            <strong>Assets &amp; Wealth</strong>
+            <small>Track properties, farm assets, vehicles, jewellery and owned assets</small>
+          </a>
+          <a class="dashboard-card tile-tax" href="#tax-planner" data-route="tax-planner">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4"/><path d="M10 12h6M10 16h4"/><path d="M5 7v14"/></svg>
+            </span>
+            <strong>Tax Planner</strong>
+            <small>Plan tax, deductions, advance tax and yearly summaries</small>
+          </a>
+
+          <a class="dashboard-card tile-entries" href="#entries" data-route="entries">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+            </span>
+            <strong>Master Ledger</strong>
+            <small>Search, filter, edit and review every synced record</small>
+          </a>
+          <a class="dashboard-card tile-settings" href="#settings-sync" data-route="settings-sync">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/></svg>
+            </span>
+            <strong>Settings</strong>
+            <small>Google Sheets, Google Drive, password and secure sync</small>
+          </a>
+          <a class="dashboard-card tile-chitty" href="#chitty" data-route="chitty">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM16 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M3 21a5 5 0 0 1 10 0M11 21a5 5 0 0 1 10 0"/></svg>
+            </span>
+            <strong>Chitty Family Circle</strong>
+            <small>Manage group payments, received chitty and monthly updates</small>
+          </a>
+          <a class="dashboard-card tile-trading" href="#trading" data-route="trading">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/><path d="M6 9h2M11 5h2M16 12h2"/></svg>
+            </span>
+            <strong>Trading Market Desk</strong>
+            <small>Sync broker holdings, prices and portfolio records</small>
+          </a>
+          <a class="dashboard-card tile-document" href="#document-vault" data-route="document-vault">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>
+            </span>
+            <strong>Document Vault</strong>
+            <small>Document numbers, expiry dates and storage locations</small>
+          </a>
+          <a class="dashboard-card tile-backup" href="#backup-restore" data-route="backup-restore">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 19h12a4 4 0 0 0 0-8 6 6 0 0 0-11-2A5 5 0 0 0 6 19z"/><path d="M12 8v7M9 12l3 3 3-3"/></svg>
+            </span>
+            <strong>Backup &amp; Restore</strong>
+            <small>Backup logs and restore tracking</small>
+          </a>
+          <a class="dashboard-card tile-export" href="#export-center" data-route="export-center">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M12 7v8M9 12l3 3 3-3"/><path d="M8 19h8"/></svg>
+            </span>
+            <strong>Export Center</strong>
+            <small>Export records by module, format and status</small>
+          </a>
+          <a class="dashboard-card tile-notify" href="#notification-center" data-route="notification-center">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 17h12l-2-3V9a4 4 0 0 0-8 0v5z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+            </span>
+            <strong>Notification Center</strong>
+            <small>Priority reminders and pending actions</small>
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <main class="app-shell">
+      <section class="entry-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Excel-backed ledger</p>
+            <h1>Smart Fin 365</h1>
+          </div>
+          <a class="download-link" href="/download">Download Excel</a>
+        </div>
+
+        <form id="entryForm" class="entry-form">
+          <label id="dateLabel">
+            Date
+            <input id="date" name="date" type="date" required>
+          </label>
+
+          <label id="entryTypeLabel">
+            Entry Type
+            <select id="type" name="type" required>
+              <option value="debt_given">Amount Lent</option>
+              <option value="debt_cleared">Amount Recovered</option>
+              <option value="chitty_paid">Chitty Paid</option>
+              <option value="chitty_received">Chitty Received</option>
+              <option value="loan">General Loan</option>
+              <option value="month_entry">Month Entry</option>
+            </select>
+          </label>
+
+          <label id="monthEntryTargetLabel">
+            Month Entry For
+            <select id="monthEntryTarget" name="monthEntryTarget">
+              <option value="chitty">Chitty / Group</option>
+              <option value="loan">General Loan</option>
+            </select>
+          </label>
+
+          <label id="partyLabel">
+            Person / Chitty Name
+            <input id="party" name="party" type="text" list="partySuggestions" placeholder="Name or chitty group" required>
+            <datalist id="partySuggestions"></datalist>
+          </label>
+
+          <label id="amountLabel">
+            Amount
+            <input id="amount" name="amount" type="number" min="0" step="0.01" placeholder="0.00" required>
+          </label>
+
+          <label id="modeLabel">
+            Payment Mode
+            <select id="mode" name="mode">
+              <option value="">Select</option>
+              <option>Cash</option>
+              <option>UPI</option>
+              <option>Bank Transfer</option>
+              <option>Cheque</option>
+              <option>Other</option>
+            </select>
+          </label>
+
+          <input id="month" name="month" type="hidden">
+          <input id="startingMonth" name="startingMonth" type="hidden">
+
+          <label id="tenureMonthsLabel">
+            Tenure (Months)
+            <input id="tenureMonths" name="tenureMonths" type="number" min="1" step="1" placeholder="Months">
+          </label>
+
+          <label id="statusLabel">
+            Status
+            <select id="status" name="status">
+              <option value="">Select</option>
+              <option>Pending</option>
+              <option>Partial</option>
+              <option>Cleared</option>
+              <option>On going</option>
+              <option>Received</option>
+              <option>Paid</option>
+            </select>
+          </label>
+
+          <label id="notesLabel" class="wide">
+            Notes
+            <textarea id="notes" name="notes" rows="3" placeholder="Optional details, due date, installment number, etc."></textarea>
+          </label>
+
+          <label id="amountReceivedLabel">
+            Principal Received
+            <input id="amountReceived" name="amountReceived" type="number" min="0" step="0.01" placeholder="0.00">
+          </label>
+
+          <label id="interestReceivedLabel">
+            Interest Received
+            <input id="interestReceivedInput" name="interestReceived" type="number" min="0" step="0.01" placeholder="0.00">
+          </label>
+
+          <label id="typeOfFundLabel">
+            Type of Fund
+            <select id="typeOfFund" name="typeOfFund">
+              <option value="Hand Loan">Hand Loan</option>
+              <option value="Bank Loan">Bank Loan</option>
+            </select>
+          </label>
+
+          <label id="interestPercentageLabel">
+            Interest Percentage
+            <input id="interestPercentage" name="interestPercentage" type="number" min="0" step="0.01">
+          </label>
+
+          <label id="emiLabel">
+            EMI
+            <input id="emi" name="emi" type="number" min="0" step="0.01">
+          </label>
+
+          <label id="finishedMonthsLabel">
+            Finished Months
+            <input id="finishedMonths" name="finishedMonths" type="number" min="0" step="1">
+          </label>
+
+          <label id="loanPaidLabel">
+            Loan Paid
+            <input id="loanPaidInput" name="loanPaid" type="number" min="0" step="0.01">
+          </label>
+
+          <div id="sheetColumnFields" class="sheet-column-fields wide" hidden></div>
+
+          <div class="form-actions wide">
+            <button id="saveEntryButton" type="submit">Save to Excel</button>
+            <button id="cancelEditButton" class="secondary-button" type="button" hidden>Cancel Edit</button>
+          </div>
+          <p id="message" class="message" role="status"></p>
+        </form>
+
+        <form id="propertyForm" class="property-form">
+          <div class="form-section-heading">
+            <h2>Property Details</h2>
+          </div>
+          <label>
+            ID
+            <input id="propertyId" type="text" disabled>
+          </label>
+          <label>
+            Property Location
+            <input id="propertyLocation" name="propertyLocation" type="text" required>
+          </label>
+          <label>
+            Google Map Location
+            <input id="googleMapLocation" name="googleMapLocation" type="url" placeholder="https://maps.google.com/...">
+          </label>
+          <label>
+            Property Size
+            <input id="propertySize" name="propertySize" type="text" placeholder="120 sqy">
+          </label>
+          <label>
+            Property Dimensions
+            <input id="propertyDimensions" name="propertyDimensions" type="text" placeholder="30 x 36">
+          </label>
+          <label>
+            Previous Land Owner
+            <input id="previousLandOwner" name="previousLandOwner" type="text">
+          </label>
+          <label>
+            Purchase Price / SqY
+            <input id="purchasePricePerSqy" name="purchasePricePerSqy" type="number" min="0" step="0.01">
+          </label>
+          <label>
+            Purchase Total Price
+            <input id="purchaseTotalPrice" name="purchaseTotalPrice" type="number" min="0" step="0.01">
+          </label>
+          <label>
+            Document Number
+            <input id="documentNumber" name="documentNumber" type="text">
+          </label>
+          <label>
+            Registration Date
+            <input id="registrationDate" name="registrationDate" type="date">
+          </label>
+          <label>
+            Sell Price / SqY
+            <input id="sellPricePerSqy" name="sellPricePerSqy" type="number" min="0" step="0.01">
+          </label>
+          <label>
+            Sell Total Price
+            <input id="sellTotalPrice" name="sellTotalPrice" type="number" min="0" step="0.01">
+          </label>
+          <label>
+            Present Owner
+            <input id="presentOwner" name="presentOwner" type="text">
+          </label>
+          <label>
+            New Owner
+            <input id="newOwner" name="newOwner" type="text">
+          </label>
+          <label class="wide">
+            Notes
+            <textarea id="propertyNotes" name="notes" rows="3"></textarea>
+          </label>
+          <label>
+            Created At
+            <input id="propertyCreatedAt" type="text" disabled>
+          </label>
+          <button type="submit">Save Property</button>
+          <p id="propertyMessage" class="message" role="status"></p>
+        </form>
+
+      </section>
+
+      <section class="overview-panel">
+        <div class="sync-panel">
+          <div>
+            <h2>App Server</h2>
+            <p id="serverStatus">Checking Smart Fin 365 server...</p>
+          </div>
+          <form id="serverForm" class="sync-form">
+            <label>
+              Finance Server URL
+              <input id="serverUrl" name="serverUrl" type="url" placeholder="https://smartfin365.com">
+            </label>
+            <button type="submit">Save Server URL</button>
+          </form>
+          <form id="securitySettingsForm" class="password-form">
+            <h3>Additional Authentication</h3>
+            <label class="auth-inline">
+              <input id="enableMpinAuth" name="mpin" type="checkbox">
+              Enable 4-digit MPIN
+            </label>
+            <label class="auth-inline">
+              <input id="enableFingerprintAuth" name="fingerprint" type="checkbox">
+              Enable Fingerprint
+            </label>
+            <label class="auth-inline">
+              <input id="enableFaceAuth" name="face" type="checkbox">
+              Enable Face Authentication
+            </label>
+            <label>
+              New MPIN
+              <input id="newMpin" name="newMpin" type="password" inputmode="numeric" minlength="4" maxlength="4" autocomplete="off" placeholder="4 digits">
+            </label>
+            <label>
+              Confirm MPIN
+              <input id="confirmMpin" name="confirmMpin" type="password" inputmode="numeric" minlength="4" maxlength="4" autocomplete="off" placeholder="4 digits">
+            </label>
+            <button type="submit">Save Authentication Methods</button>
+            <p id="securitySettingsStatus" class="message" role="status"></p>
+          </form>
+        </div>
+
+        <div class="drive-panel">
+          <div>
+            <h2>Google Sheets &amp; Drive</h2>
+            <p id="driveStatus">Checking Google Drive connection...</p>
+            <p id="driveSetupHint" class="drive-setup-hint"></p>
+            <a id="driveFolderLink" href="https://drive.google.com/drive/folders/11J5-NCSvx4dgCaZ1JwY5HIlcmlB2-a6v" target="_blank" rel="noreferrer">Open Drive Folder</a>
+          </div>
+          <details class="oauth-help-panel">
+            <summary>View Setup Instructions</summary>
+            <div class="oauth-help-content">
+              <h3>How to Create Google OAuth Credentials</h3>
+              <div class="oauth-redirect-row">
+                <label>
+                  Authorized Redirect URI
+                  <input id="googleRedirectUri" type="text" readonly value="">
+                </label>
+                <button id="copyGoogleRedirectUri" type="button">Copy URI</button>
+              </div>
+              <p class="security-note">Copy this exact URI into Google Cloud Console under Authorized redirect URIs. The protocol, domain, port, path and trailing slash must match exactly.</p>
+              <ol class="oauth-steps">
+                <li><strong>Step 1 - Create a Google Cloud Project</strong><p>Open Google Cloud Console, sign in with the Gmail account used for Smart Fin 365, create a project named "Smart Fin 365", and select it.</p><a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a></li>
+                <li><strong>Step 2 - Enable Google APIs</strong><p>Open APIs &amp; Services - Library. Enable Google Drive API, Google Sheets API, and Gmail API only if the application sends Gmail messages.</p><a href="https://console.cloud.google.com/apis/library" target="_blank" rel="noopener noreferrer">API Library</a></li>
+                <li><strong>Step 3 - Configure Google OAuth Branding</strong><p>Open Google Auth Platform, enter "Smart Fin 365" as the application name, add support/developer emails, upload the logo, and save.</p><a href="https://console.cloud.google.com/auth/branding" target="_blank" rel="noopener noreferrer">OAuth Branding</a><a href="https://support.google.com/cloud/answer/15549049" target="_blank" rel="noopener noreferrer">Google branding guide</a></li>
+                <li><strong>Step 4 - Configure the Audience</strong><p>Select External for personal Gmail accounts. Use Internal only for Google Workspace. Keep Testing during setup and add the Smart Fin 365 Gmail address as a test user.</p><a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener noreferrer">OAuth Audience</a><a href="https://support.google.com/cloud/answer/15549945" target="_blank" rel="noopener noreferrer">Audience guide</a></li>
+                <li><strong>Step 5 - Configure Data Access</strong><p>Add only required scopes: drive.file, spreadsheets, openid, email, profile, and gmail.send only when Gmail sending is enabled.</p><a href="https://console.cloud.google.com/auth/scopes" target="_blank" rel="noopener noreferrer">OAuth Scopes</a><a href="https://support.google.com/cloud/answer/15549135" target="_blank" rel="noopener noreferrer">Data access guide</a></li>
+                <li><strong>Step 6 - Create the OAuth Client</strong><p>Open Google Auth Platform - Clients, create a Web application client, and name it "Smart Fin 365 Web Client".</p><a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">OAuth Clients</a><a href="https://support.google.com/cloud/answer/15549257" target="_blank" rel="noopener noreferrer">OAuth client guide</a></li>
+                <li><strong>Step 7 - Add Authorized JavaScript Origins</strong><p>For local use enter http://localhost:3333. For production enter the exact HTTPS domain. Do not include a page path.</p></li>
+                <li><strong>Step 8 - Add Authorized Redirect URIs</strong><p>Use the exact Authorized Redirect URI displayed above. Local is normally http://localhost:3333/oauth2callback. Production is generated from the configured public application URL.</p></li>
+                <li><strong>Step 9 - Copy the Credentials</strong><p>Copy the complete OAuth Client ID and Client Secret into Smart Fin 365, click Save Drive Setup, Connect Gmail, approve permissions, and test Upload Excel Now.</p></li>
+              </ol>
+              <section class="official-guides">
+                <h4>Official Google Guides</h4>
+                <a href="https://developers.google.com/identity/protocols/oauth2/web-server" target="_blank" rel="noopener noreferrer">Google OAuth for web-server applications</a>
+                <a href="https://support.google.com/cloud/answer/15544987" target="_blank" rel="noopener noreferrer">Google Auth Platform setup</a>
+                <a href="https://support.google.com/cloud/answer/15549257" target="_blank" rel="noopener noreferrer">Manage OAuth clients</a>
+                <a href="https://developers.google.com/workspace/drive/api/quickstart/nodejs" target="_blank" rel="noopener noreferrer">Google Drive API Node.js quickstart</a>
+              </section>
+            </div>
+          </details>
+          <form id="driveSettingsForm" class="drive-form gmail-form">
+            <label>
+              Gmail Address
+              <input id="gmailAddress" name="gmailAddress" type="email" autocomplete="email" placeholder="yourname@gmail.com">
+            </label>
+            <label>
+              OAuth Client ID
+              <input id="googleClientId" name="googleClientId" type="text" placeholder="...apps.googleusercontent.com">
+            </label>
+            <label>
+              OAuth Client Secret
+              <span class="secret-input-row">
+                <input id="googleClientSecret" name="googleClientSecret" type="password" autocomplete="off" placeholder="OAuth client secret">
+                <button id="toggleGoogleClientSecret" type="button">Show</button>
+              </span>
+            </label>
+            <button type="submit">Save Drive Setup</button>
+          </form>
+          <div class="drive-actions">
+            <a class="secondary-link" href="/auth/google">Connect Gmail</a>
+            <button id="uploadDriveButton" type="button">Upload Excel Now</button>
+          </div>
+        </div>
+
+        <div class="sync-panel">
+          <div>
+            <h2>Sync Monitoring</h2>
+            <p id="syncMonitoringStatus">Checking webpage, local Excel and Google Drive sync status...</p>
+          </div>
+          <div id="syncMonitoringGrid" class="sync-monitoring-grid"></div>
+          <div class="drive-actions">
+            <button id="retrySyncButton" type="button">Retry Sync</button>
+            <button id="syncAllButton" type="button">Sync All Now</button>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <section class="summary-row" aria-labelledby="debtSummaryTitle">
+            <h3 id="debtSummaryTitle">Lent Summary</h3>
+            <div class="summary-metrics">
+              <div class="metric">
+                <span>Amount Lent</span>
+                <strong id="debtGiven">0.00</strong>
+              </div>
+              <div class="metric">
+                <span>Amount Recovered</span>
+                <strong id="debtCleared">0.00</strong>
+              </div>
+              <div class="metric accent">
+                <span>Outstanding Lent with Interest</span>
+                <strong id="debtBalance">0.00</strong>
+                <small id="debtInterest">24% yearly: 0.00</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="summary-row" aria-labelledby="loanSummaryTitle">
+            <h3 id="loanSummaryTitle">Loans and Property Loans Summary</h3>
+            <div class="summary-metrics">
+              <div class="metric">
+                <span>Total Loan Amount</span>
+                <strong id="loanAmount">0.00</strong>
+                <small id="loanAmountInterest">0.00 interest</small>
+              </div>
+              <div class="metric">
+                <span>Total Loan Paid</span>
+                <strong id="loanPaid">0.00</strong>
+              </div>
+              <div class="metric accent">
+                <span>Total Pending Loan</span>
+                <strong id="remainingLoanAmount">0.00</strong>
+                <small id="remainingLoanInterest">0.00 interest</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="summary-row" aria-labelledby="chittySummaryTitle">
+            <h3 id="chittySummaryTitle">Chitty Summary</h3>
+            <div class="summary-metrics">
+              <div class="metric">
+                <span>Total Chitty</span>
+                <strong id="chittyPaid">0.00</strong>
+              </div>
+              <div class="metric">
+                <span>Chitty Received</span>
+                <strong id="chittyReceived">0.00</strong>
+              </div>
+              <div class="metric accent">
+                <span>Pending Chitty</span>
+                <strong id="chittyNet">0.00</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="summary-row" aria-labelledby="tradingSummaryTitle">
+            <h3 id="tradingSummaryTitle">Trading Summary</h3>
+            <div class="summary-metrics">
+              <div class="metric">
+                <span>Invested Value</span>
+                <strong id="tradingInvestedValue">0.00</strong>
+              </div>
+              <div class="metric">
+                <span>Current Value</span>
+                <strong id="tradingCurrentValue">0.00</strong>
+              </div>
+              <div class="metric accent">
+                <span>Profit / Loss</span>
+                <strong id="tradingProfitLoss">0.00</strong>
+                <small id="tradingProfitPercent">0.00%</small>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-heading">
+            <h2>Trading</h2>
+            <span id="tradingCount">0 records</span>
+          </div>
+          <div id="tradingSheetFields" class="sheet-column-fields trading-sheet-fields"></div>
+          <form id="upstoxForm" class="sync-form">
+            <label>
+              Broker
+              <select id="tradingBroker" name="broker">
+                <option value="Upstox">Upstox</option>
+                <option value="Zerodha">Zerodha</option>
+                <option value="Dhan">Dhan</option>
+              </select>
+            </label>
+            <label>
+              Trading Access Token
+              <input id="upstoxAccessToken" name="upstoxAccessToken" type="password" autocomplete="off" placeholder="Paste trading access token">
+            </label>
+            <button type="submit">Save Token</button>
+          </form>
+          <p class="broker-doc-links">
+            Token help:
+            <a href="https://upstox.com/developer/api-documentation/" target="_blank" rel="noreferrer">Upstox</a>
+            <a href="https://kite.trade/docs/connect/v3/" target="_blank" rel="noreferrer">Zerodha</a>
+            <a href="https://dhanhq.co/docs/v2/" target="_blank" rel="noreferrer">Dhan</a>
+          </p>
+          <div class="drive-actions">
+            <button id="syncUpstoxButton" type="button">Sync Trading</button>
+            <span id="upstoxStatus" class="inline-status">Checking trading token...</span>
+            <span id="tradingLastSync" class="inline-status">Last successful sync: Not synced yet</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Asset Type</th>
+                <th>Symbol / Name</th>
+                <th>Invested Date</th>
+                <th>Average Buy Price</th>
+                <th>Current Market Price</th>
+                <th>Quantity</th>
+                <th>Invested Value</th>
+                <th>Current Value</th>
+                <th>Realised P/L</th>
+                <th>Unrealised P/L</th>
+                <th>Profit/Loss</th>
+                <th>Profit %</th>
+                <th>Last Updated Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="tradingBody">
+              <tr>
+                <td colspan="14" class="empty">No trading records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="chart-panel">
+          <div class="table-heading">
+            <h2>Yearly Growth</h2>
+            <span id="chartSummary">Loading chart...</span>
+          </div>
+          <div id="reportsContent" class="reports-content"></div>
+          <div class="growth-stack">
+            <article class="growth-card">
+              <h3>Lent Growth Graph</h3>
+              <div class="line-chart-tools" data-chart-tools="debtGrowthChart">
+                <button type="button" data-chart-action="png" data-chart-target="debtGrowthChart">PNG</button>
+                <button type="button" data-chart-action="excel" data-chart-target="debtGrowthChart">Excel</button>
+                <button type="button" data-chart-action="print" data-chart-target="debtGrowthChart">Print / PDF</button>
+                <button type="button" data-chart-action="fullscreen" data-chart-target="debtGrowthChart">Full Screen</button>
+              </div>
+              <canvas id="debtGrowthChart" width="720" height="260" aria-label="Lent growth graph"></canvas>
+            </article>
+            <article class="growth-card">
+              <h3>Chitty Growth Graph</h3>
+              <div class="line-chart-tools" data-chart-tools="chittyGrowthChart">
+                <button type="button" data-chart-action="png" data-chart-target="chittyGrowthChart">PNG</button>
+                <button type="button" data-chart-action="excel" data-chart-target="chittyGrowthChart">Excel</button>
+                <button type="button" data-chart-action="print" data-chart-target="chittyGrowthChart">Print / PDF</button>
+                <button type="button" data-chart-action="fullscreen" data-chart-target="chittyGrowthChart">Full Screen</button>
+              </div>
+              <canvas id="chittyGrowthChart" width="720" height="260" aria-label="Chitty growth graph"></canvas>
+            </article>
+            <article class="growth-card">
+              <h3>Loan Growth Graph</h3>
+              <div class="line-chart-tools" data-chart-tools="loanGrowthChart">
+                <button type="button" data-chart-action="png" data-chart-target="loanGrowthChart">PNG</button>
+                <button type="button" data-chart-action="excel" data-chart-target="loanGrowthChart">Excel</button>
+                <button type="button" data-chart-action="print" data-chart-target="loanGrowthChart">Print / PDF</button>
+                <button type="button" data-chart-action="fullscreen" data-chart-target="loanGrowthChart">Full Screen</button>
+              </div>
+              <canvas id="loanGrowthChart" width="720" height="260" aria-label="Loan growth graph"></canvas>
+            </article>
+            <article class="growth-card">
+              <h3>Trading Growth Graph</h3>
+              <div class="line-chart-tools" data-chart-tools="tradingGrowthChart">
+                <button type="button" data-chart-action="png" data-chart-target="tradingGrowthChart">PNG</button>
+                <button type="button" data-chart-action="excel" data-chart-target="tradingGrowthChart">Excel</button>
+                <button type="button" data-chart-action="print" data-chart-target="tradingGrowthChart">Print / PDF</button>
+                <button type="button" data-chart-action="fullscreen" data-chart-target="tradingGrowthChart">Full Screen</button>
+              </div>
+              <canvas id="tradingGrowthChart" width="720" height="260" aria-label="Trading growth graph"></canvas>
+            </article>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-heading">
+            <h2>Properties</h2>
+            <span id="propertyCount">0 records</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Property Location</th>
+                <th>Google Map Location</th>
+                <th>Property Size</th>
+                <th>Property Dimensions</th>
+                <th>Previous Land Owner</th>
+                <th>Purchase Price / SqY</th>
+                <th>Purchase Total Price</th>
+                <th>Document Number</th>
+                <th>Registration Date</th>
+                <th>Sell Price / SqY</th>
+                <th>Sell Total Price</th>
+                <th>Present Owner</th>
+                <th>New Owner</th>
+                <th>Notes</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody id="propertiesBody">
+              <tr>
+                <td colspan="16" class="empty">No property records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="feature-panel" id="modulePanel">
+        <div class="module-intro" id="moduleIntro"></div>
+        <div class="module-sections" id="moduleSections"></div>
+      </section>
+
+      <section class="table-wrap entries-panel">
+        <div class="table-heading">
+          <h2>All Entries</h2>
+          <span id="entryCount">0 records</span>
+        </div>
+        <div class="table-controls">
+          <input id="searchInput" type="search" placeholder="Search name, status, notes">
+          <select id="typeFilter">
+            <option value="">All Types</option>
+            <option value="debt_given">Amount Lent</option>
+            <option value="debt_cleared">Amount Recovered</option>
+            <option value="chitty_paid">Chitty Paid</option>
+            <option value="chitty_received">Chitty Received</option>
+            <option value="loan_pending">Loan Pending</option>
+            <option value="loan_cleared">Loan Cleared</option>
+            <option value="property">Properties</option>
+            <option value="trading">Trading</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Name</th>
+              <th>Amount</th>
+              <th>Final / Pending</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entriesBody">
+            <tr>
+              <td colspan="8" class="empty">No records yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="server-config.js?v=20260719-smart-fin-365-brand"></script>
+    <script src="script.js?v=20260719-smart-fin-365-brand"></script>
+  </body>
+</html>
